@@ -20,9 +20,19 @@ client.on('ready', async () => {
   console.log(`Logged in as ${client.user.tag}!`);
 });
 
-let prefix = process.env.PREFIX;
-let token = process.env.TOKEN;
+let prefix = '>';
+let token = 'NzY5ODY5NTI1MjI3MDEyMTE2.X5VS3g.bMcKgZeRqKLGMH7JN_grLwL9BP0';
 
+client.on('message', async (message) => {
+  if (!message.content.startsWith(prefix) || message.author.bot) return;
+  
+  if (message.content.startsWith(prefix + 'prune') || message.content.startsWith(prefix + 'purge')) {
+    const args = message.content.slice(prefix.length).trim().split(/ +/g);
+    
+    // Embeds
+    const prunePerms = new Discord.MessageEmbed()
+    .setColor(0xda7272)
+    .setTimestamp()
     .setTitle('Error!')
     .setDescription('You don\'t have any permissions to run this command \n**Required Permissions**: `MANAGE_MESSAGES` and `ADMINISTRATOR`')
     
@@ -420,4 +430,4 @@ client.on('message', async (message) => {
   }
 });
 
-client.login('NzY5ODY5NTI1MjI3MDEyMTE2.X5VS3g.bMcKgZeRqKLGMH7JN_grLwL9BP0');
+client.login(token);
