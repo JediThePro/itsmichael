@@ -23,6 +23,52 @@ client.on('ready', async () => {
 let prefix = process.env.PREFIX;
 let token = process.env.TOKEN;
 
+    .setTitle('Error!')
+    .setDescription('You don\'t have any permissions to run this command \n**Required Permissions**: `MANAGE_MESSAGES` and `ADMINISTRATOR`')
+    
+    const pruneBotPerms = new Discord.MessageEmbed()
+    .setColor(0xda7272)
+    .setTimestamp()
+    .setTitle('Error!')
+    .setDescription('I don\'t have permissions to run this command \n**Required Permissions:** `MANAGE_MESSAGES` and `ADMINISTRATOR`')
+    
+    const pruneIsNaN = new Discord.MessageEmbed()
+    .setColor(0xda7272)
+    .setTimestamp()
+    .setTitle('Error!')
+    .setDescription('Please input a valid number')
+    
+    const pruneLess100 = new Discord.MessageEmbed()
+    .setColor(0xda7272)
+    .setTimestamp()
+    .setTitle('Error!')
+    .setDescription('Insert the number less than 100')
+    
+    const pruneMore1 = new Discord.MessageEmbed()
+    .setColor(0xda7272)
+    .setTimestamp()
+    .setTitle('Error!')
+    .setDescription('Insert the number more than 1')
+    
+    if (!message.member.hasPermission('ADMINISTRATOR') || !message.member.hasPermission('MANAGE_MESSAGES')) return message.reply(prunePerms);
+    if (!message.guild.me.hasPermission('ADMINISTRATOR') || !message.guild.me.hasPermission('MANAGE_MESSAGES')) return message.reply(pruneBotPerms);
+    if (isNaN(args[0])) return message.channel.send(pruneIsNaN) // isNaN = is Not a Number. (case sensitive, write it right)
+    if (args[0] > 100) return message.channel.send(pruneLess100) // Discord limited purge number into 100.
+    if (args[0] < 2) return message.channel.send(pruneMore1)
+    
+    const pruneErr = new Discord.MessageEmbed()
+    .setColor(0xda7272)
+    .setTimestamp()
+    .setTitle('Something went wrong!')
+    .setDescription('Something went wrong, while deleting messages')
+    
+    await message.delete()
+    await message.channel.bulkDelete(args[0])
+    .then(messages => message.channel.send(`Deleted ${messages.size}/${args[0]} messages.`)).then(d => d.delete({timeout: 10000})) // How long this message will be deleted (in ms)
+    .catch(() => message.channel.send(pruneErr))
+  }
+})
+
 client.on('message', async message => { 
     if (message.author.bot) return;
     
@@ -60,20 +106,20 @@ client.on('message', async message => {
                     MANAGE_CHANNELS: true
                 }); // This will set the permissions so only Staff will see the ticket.
             let author = message.author;
-            const newChannel = new Discord.MessageEmbed()
+            const newChannel = new Discord.RichEmbed()
                 .setColor('36393E')
                 .setAuthor(author.tag, author.displayAvatarURL)
                 .setFooter('ModMail Ticket Created')
                 .addField('User', author)
                 .addField('ID', author.id);
-            await message.channel.send(newChannel);
+            await channel.send(newChannel);
             
-            const newTicket = new Discord.MessageEmbed()
+            const newTicket = new Discord.RichEmbed()
                 .setColor('36393E')
                 .setAuthor(`Hello, ${author.tag}`, author.displayAvatarURL)
                 .setFooter('ModMail Ticket Created');
                 
-            await message.author.send(newTicket);
+            await author.send(newTicket);
             
             // Update Active Data
             active.channelID = channel.id;
@@ -81,20 +127,20 @@ client.on('message', async message => {
         }
         
         channel = client.channels.get(active.channelID);
-        const dm = new Discord.MessageEmbed()
+        const dm = new Discord.RichEmbed()
             .setColor('36393E')
             .setAuthor(`Thank you, ${message.author.tag}`, message.author.displayAvatarURL)
             .setFooter(`Your message has been sent -- A staff member will be in contact soon.`);
             
         await message.author.send(dm);
         
-        const embed = new Discord.MessageEmbed()
+        const embed = new Discord.RichEmbed()
             .setColor('36393E')
             .setAuthor(message.author.tag, message.author.displayAvatarURL)
             .setDescription(message.content)
             .setFooter(`Message Recieved -- ${message.author.tag}`);
             
-        await message.channel.send(embed);
+        await channel.send(embed);
         db.set(`support_${message.author.id}`, active);
         db.set(`supportChannel_${channel.id}`, message.author.id);
         return;
@@ -107,14 +153,14 @@ client.on('message', async message => {
         if (!supportUser) return message.channel.delete();
         
         // !complete command
-        if (message.content === (prefix + 'complete')) {
-            const complete = new Discord.MessageEmbed()
+        if (message.content.toLowerCase() === "_complete") {
+            const complete = new Discord.RichEmbed()
                 .setColor('36393E')
                 .setAuthor(`Hey, ${supportUser.tag}`, supportUser.displayAvatarURL)
                 .setFooter('Ticket Closed')
                 .setDescription('*Your ModMail has been marked as **Complete**. If you wish to reopen this, or create a new one, please send a message to the bot.*');
                 
-            message.supportUser.send(complete);
+            supportUser.send(complete);
             message.channel.delete()
                 .then(console.log(`Support for ${supportUser.tag} has been closed.`))
                 .catch(console.error);
